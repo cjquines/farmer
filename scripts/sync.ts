@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { steamDir, repoDir, builtins } from "../src/paths.js";
+import { builtins, repoDir, steamDir } from "./paths.js";
 
 await fs.copyFile(path.join(steamDir, builtins), path.join(repoDir, builtins));
 
