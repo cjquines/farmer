@@ -3,6 +3,6 @@ import * as path from "node:path";
 import { repoDir, builtins as builtinsPath } from "../src/paths.js";
 
 const builtins = await fs.readFile(path.join(repoDir, builtinsPath), "utf-8");
-const typesPath = path.resolve(repoDir, "..", "src", "types.ts");
+const typesDir = path.resolve(repoDir, "..", "src", "types");
 
-// TODO: parse builtins to typesPath
+// TODO: Parse builtins to files in typesDir.
