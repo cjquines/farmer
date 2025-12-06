@@ -1,7 +1,7 @@
 import type { Item } from "./items.js";
-import type { Bool, Call, Int, Primitive } from "./python.js";
+import type { Bool, Call, Int } from "./python.js";
 
-function call<const P extends Primitive>(
+function call<const P extends string>(
   method: string,
   params: any[],
   returns: P,

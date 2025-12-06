@@ -1,19 +1,19 @@
-export const Primitive = {
-  bool: "bool",
-  int: "int",
-  float: "float",
-} as const;
-
-export type Primitive = (typeof Primitive)[keyof typeof Primitive];
-
-export type Call<P extends Primitive> = {
+export type Call<PyType extends string> = {
   method: string;
   params: any[];
-  returns: P;
+  returns: PyType;
 };
 
-export type Bool = boolean | Call<"bool">;
+export type PythonType<PyType extends string, TSType> = TSType | Call<PyType>;
 
-export type Int = number | Call<"int">;
+export type Any = PythonType<"Any", any>;
 
-export type Float = number | Call<"float">;
+export type Bool = PythonType<"bool", boolean>;
+
+export type Float = PythonType<"float", number>;
+
+export type Int = PythonType<"int", number>;
+
+export type None = PythonType<"None", null>;
+
+export type Str = PythonType<"str", string>;
