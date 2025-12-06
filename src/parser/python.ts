@@ -1,3 +1,5 @@
+import type { Parser } from "./combinators.js";
+
 type EnumItem = {
   name: string;
   type: string;
@@ -8,6 +10,9 @@ type Enum = {
   name: string;
   items: EnumItem[];
 };
+
+// @ts-expect-error - TODO
+const parseEnum: Parser<Enum> = null;
 
 type Method = {
   name: string;
@@ -20,21 +25,18 @@ type Method = {
   docstring: string;
 };
 
-export function parseFile(content: string): {
+// @ts-expect-error - TODO
+const parseMethod: Parser<Method> = null;
+
+/**
+ * Parse the __builtins__.py file to a minimal Python AST.
+ *
+ * We'll assume it follows a specific format: a bunch of enum-like classes,
+ * followed by a bunch of methods.
+ */
+export function parseAST(content: string): {
   enums: Enum[];
   methods: Method[];
 } {
-  throw new Error("Not implemented");
-}
-
-type Parsed<T> =
-  | { success: true; value: T; nextIndex: number }
-  | { success: false };
-
-function parseEnum(content: string, startIndex: number): Parsed<Enum> {
-  throw new Error("Not implemented");
-}
-
-function parseMethod(content: string, startIndex: number): Parsed<Method> {
   throw new Error("Not implemented");
 }

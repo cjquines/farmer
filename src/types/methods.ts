@@ -1,13 +1,6 @@
 import type { Item } from "./items.js";
-import type { Bool, Call, Int } from "./python.js";
-
-function call<const P extends string>(
-  method: string,
-  params: any[],
-  returns: P,
-): Call<P> {
-  return { method, params, returns };
-}
+import type { Bool, Int } from "./python.js";
+import { call } from "./python.js";
 
 /**
  * Attempts to use the specified `item` `n` times. Can only be used with some items including `Items.Water`, `Items.Fertilizer` and `Items.Weird_Substance`.
