@@ -1,4 +1,4 @@
-import type { ParserDrop, ParserObject } from "./base.js";
+import type { ParserDrop, ParserObject, UnwrapParserObject } from "./base.js";
 import { Parser } from "./base.js";
 
 type ArrayOf<T> = T extends null
@@ -9,8 +9,7 @@ type ArrayOf<T> = T extends null
       ? Ts[]
       : [T];
 
-/** Merge two parser results. */
-export type Merge<T, U> = T extends ParserDrop
+type Merge_<T, U> = T extends ParserDrop
   ? U
   : U extends ParserDrop
     ? T
@@ -19,6 +18,18 @@ export type Merge<T, U> = T extends ParserDrop
         ? ParserObject<To & Uo>
         : ParserObject<To>
       : [...ArrayOf<T>, ...ArrayOf<U>];
+
+type Simplify<T> = { [KeyType in keyof T]: T[KeyType] } & {};
+
+/** Merge parser results. */
+export type Merge<T, U> = Simplify<UnwrapParserObject<Merge_<T, U>>>;
+
+/** Merge multiple parser results. */
+export type MergeMany<T extends unknown[]> = T extends [infer First]
+  ? First
+  : T extends [infer First, ...infer Rest]
+    ? Merge<First, MergeMany<Rest>>
+    : never;
 
 /**
  * Merge two parser results.
@@ -39,10 +50,7 @@ export function merge<T, U>(a: T, b: U) {
 
   if (Parser.isObject(a)) {
     if (Parser.isObject(b)) {
-      return {
-        ...a,
-        ...b,
-      } as Merge<T, U>;
+      Object.assign(a, b);
     }
     return a;
   }

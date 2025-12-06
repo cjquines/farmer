@@ -26,11 +26,16 @@ describe("Parser combinators", () => {
   });
 
   it("combines objects", () => {
-    const result = lit("a").as("a").and(lit("b").as("b")).parse(from("ab"));
+    const result = Parser.and(
+      lit("a").as("a"),
+      lit("b").drop(),
+      lit("c").as("c"),
+      lit("d").as("d"),
+    ).parse(from("abcd"));
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.value).toEqual({ a: "a", b: "b" });
+      expect(result.value).toEqual({ a: "a", c: "c", d: "d" });
     }
   });
 

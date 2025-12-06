@@ -69,10 +69,11 @@ export function parseBuiltins(
       const params = method.params.map((param) => {
         const tsType = mapPythonType(param.type, knownTypes);
         registerImports(tsType, typeToModule, pythonTypeImports, imports);
+        const default_ = mapDefault(param.default);
         return {
           name: param.name,
           type: tsType,
-          default: mapDefault(param.default),
+          ...(default_ && { default: default_ }),
         };
       });
 
@@ -168,20 +169,19 @@ function toCamel(name: string) {
   return name.replace(/_([a-zA-Z])/g, (_, char: string) => char.toUpperCase());
 }
 
-function mapDefault(defaultValue: string | undefined): string | undefined {
-  if (defaultValue === undefined) {
-    return undefined;
+function mapDefault(
+  defaultValue: string | number | boolean | null | undefined,
+): string | undefined {
+  switch (typeof defaultValue) {
+    case "string":
+      return JSON.stringify(defaultValue);
+    case "number":
+      return defaultValue.toString();
+    case "boolean":
+      return defaultValue ? "True" : "False";
+    default:
+      return undefined;
   }
-  if (defaultValue === "None") {
-    return "null";
-  }
-  if (defaultValue === "True") {
-    return "true";
-  }
-  if (defaultValue === "False") {
-    return "false";
-  }
-  return defaultValue;
 }
 
 function registerImports(

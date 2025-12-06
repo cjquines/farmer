@@ -13,6 +13,7 @@ export class Parser<T> extends BaseParser<Token, T> {
   parse(content: string): ParseResult<T>;
   parse(content: Token[]): ParseResult<T>;
   parse(stream: ParseStream<Token>): ParseResult<T>;
+  parse(input: string | Token[] | ParseStream<Token>): ParseResult<T>;
   parse(input: string | Token[] | ParseStream<Token>): ParseResult<T> {
     return super.parse(typeof input === "string" ? tokenize(input) : input);
   }
@@ -36,6 +37,9 @@ export class Parser<T> extends BaseParser<Token, T> {
     });
   }
 
+  static number = (value?: string) =>
+    Parser.token(TokenType.NUMBER, value).map((t) => parseInt(t.string));
+
   static name = (value?: string) =>
     Parser.token(TokenType.NAME, value).map((t) => t.string);
 
@@ -44,4 +48,13 @@ export class Parser<T> extends BaseParser<Token, T> {
 
   static string = (value?: string) =>
     Parser.token(TokenType.STRING, value).map((t) => t.string);
+
+  static constant = () =>
+    Parser.or(
+      Parser.name("None").map(() => null),
+      Parser.name("True").map(() => true),
+      Parser.name("False").map(() => false),
+      Parser.number(),
+      Parser.string(),
+    );
 }

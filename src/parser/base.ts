@@ -1,4 +1,4 @@
-import { merge, type Merge } from "./merge.js";
+import { merge, type Merge, type MergeMany } from "./merge.js";
 import { Stream as BaseStream } from "./stream.js";
 
 export type ParseResult<T> =
@@ -46,6 +46,8 @@ export class ParseStream<T> extends BaseStream<T> {
 export type ParserDrop = typeof Parser.Drop;
 
 export type ParserObject<T> = T & { [Parser.AsObject]: true };
+
+export type UnwrapParserObject<T> = T extends ParserObject<infer U> ? U : T;
 
 export class Parser<S, T> {
   #parse: (stream: ParseStream<S>) => ParseResult<T>;
@@ -107,7 +109,11 @@ export class Parser<S, T> {
 
   /** Check if the result is wrapped in an object. */
   static isObject<T>(obj: T): obj is ParserObject<T> {
-    return (obj as any)[Parser.AsObject] === true;
+    return (
+      typeof obj === "object" &&
+      obj !== null &&
+      (obj as any)[Parser.AsObject] === true
+    );
   }
 
   /**
@@ -183,6 +189,56 @@ export class Parser<S, T> {
     parser4: Parser<S, T4>,
     parser5: Parser<S, T5>,
   ): Parser<S, T1 | T2 | T3 | T4 | T5>;
+  static or<S, T1, T2, T3, T4, T5, T6>(
+    parser1: Parser<S, T1>,
+    parser2: Parser<S, T2>,
+    parser3: Parser<S, T3>,
+    parser4: Parser<S, T4>,
+    parser5: Parser<S, T5>,
+    parser6: Parser<S, T6>,
+  ): Parser<S, T1 | T2 | T3 | T4 | T5 | T6>;
+  static or<S, T1, T2, T3, T4, T5, T6, T7>(
+    parser1: Parser<S, T1>,
+    parser2: Parser<S, T2>,
+    parser3: Parser<S, T3>,
+    parser4: Parser<S, T4>,
+    parser5: Parser<S, T5>,
+    parser6: Parser<S, T6>,
+    parser7: Parser<S, T7>,
+  ): Parser<S, T1 | T2 | T3 | T4 | T5 | T6 | T7>;
+  static or<S, T1, T2, T3, T4, T5, T6, T7, T8>(
+    parser1: Parser<S, T1>,
+    parser2: Parser<S, T2>,
+    parser3: Parser<S, T3>,
+    parser4: Parser<S, T4>,
+    parser5: Parser<S, T5>,
+    parser6: Parser<S, T6>,
+    parser7: Parser<S, T7>,
+    parser8: Parser<S, T8>,
+  ): Parser<S, T1 | T2 | T3 | T4 | T5 | T6 | T7 | T8>;
+  static or<S, T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+    parser1: Parser<S, T1>,
+    parser2: Parser<S, T2>,
+    parser3: Parser<S, T3>,
+    parser4: Parser<S, T4>,
+    parser5: Parser<S, T5>,
+    parser6: Parser<S, T6>,
+    parser7: Parser<S, T7>,
+    parser8: Parser<S, T8>,
+    parser9: Parser<S, T9>,
+  ): Parser<S, T1 | T2 | T3 | T4 | T5 | T6 | T7 | T8 | T9>;
+  static or<S, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
+    parser1: Parser<S, T1>,
+    parser2: Parser<S, T2>,
+    parser3: Parser<S, T3>,
+    parser4: Parser<S, T4>,
+    parser5: Parser<S, T5>,
+    parser6: Parser<S, T6>,
+    parser7: Parser<S, T7>,
+    parser8: Parser<S, T8>,
+    parser9: Parser<S, T9>,
+    parser10: Parser<S, T10>,
+  ): Parser<S, T1 | T2 | T3 | T4 | T5 | T6 | T7 | T8 | T9 | T10>;
   static or<S, Ts>(...parsers: Parser<S, Ts>[]): Parser<S, Ts>;
   static or<S, Ts>(...parsers: Parser<S, Ts>[]): Parser<S, Ts> {
     const result = parsers.at(0)!;
@@ -226,24 +282,74 @@ export class Parser<S, T> {
     parser1: Parser<S, T1>,
     parser2: Parser<S, T2>,
     parser3: Parser<S, T3>,
-  ): Parser<S, Merge<T1, Merge<T2, T3>>>;
+  ): Parser<S, MergeMany<[T1, T2, T3]>>;
   static and<S, T1, T2, T3, T4>(
     parser1: Parser<S, T1>,
     parser2: Parser<S, T2>,
     parser3: Parser<S, T3>,
     parser4: Parser<S, T4>,
-  ): Parser<S, Merge<T1, Merge<T2, Merge<T3, T4>>>>;
+  ): Parser<S, MergeMany<[T1, T2, T3, T4]>>;
   static and<S, T1, T2, T3, T4, T5>(
     parser1: Parser<S, T1>,
     parser2: Parser<S, T2>,
     parser3: Parser<S, T3>,
     parser4: Parser<S, T4>,
     parser5: Parser<S, T5>,
-  ): Parser<S, Merge<T1, Merge<T2, Merge<T3, Merge<T4, T5>>>>>;
-  static and<S, Ts>(...parsers: Parser<S, Ts>[]): Parser<S, Ts>;
-  static and<S, Ts>(...parsers: Parser<S, Ts>[]): Parser<S, Ts> {
+  ): Parser<S, MergeMany<[T1, T2, T3, T4, T5]>>;
+  static and<S, T1, T2, T3, T4, T5, T6>(
+    parser1: Parser<S, T1>,
+    parser2: Parser<S, T2>,
+    parser3: Parser<S, T3>,
+    parser4: Parser<S, T4>,
+    parser5: Parser<S, T5>,
+    parser6: Parser<S, T6>,
+  ): Parser<S, MergeMany<[T1, T2, T3, T4, T5, T6]>>;
+  static and<S, T1, T2, T3, T4, T5, T6, T7>(
+    parser1: Parser<S, T1>,
+    parser2: Parser<S, T2>,
+    parser3: Parser<S, T3>,
+    parser4: Parser<S, T4>,
+    parser5: Parser<S, T5>,
+    parser6: Parser<S, T6>,
+    parser7: Parser<S, T7>,
+  ): Parser<S, MergeMany<[T1, T2, T3, T4, T5, T6, T7]>>;
+  static and<S, T1, T2, T3, T4, T5, T6, T7, T8>(
+    parser1: Parser<S, T1>,
+    parser2: Parser<S, T2>,
+    parser3: Parser<S, T3>,
+    parser4: Parser<S, T4>,
+    parser5: Parser<S, T5>,
+    parser6: Parser<S, T6>,
+    parser7: Parser<S, T7>,
+    parser8: Parser<S, T8>,
+  ): Parser<S, MergeMany<[T1, T2, T3, T4, T5, T6, T7, T8]>>;
+  static and<S, T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+    parser1: Parser<S, T1>,
+    parser2: Parser<S, T2>,
+    parser3: Parser<S, T3>,
+    parser4: Parser<S, T4>,
+    parser5: Parser<S, T5>,
+    parser6: Parser<S, T6>,
+    parser7: Parser<S, T7>,
+    parser8: Parser<S, T8>,
+    parser9: Parser<S, T9>,
+  ): Parser<S, MergeMany<[T1, T2, T3, T4, T5, T6, T7, T8, T9]>>;
+  static and<S, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
+    parser1: Parser<S, T1>,
+    parser2: Parser<S, T2>,
+    parser3: Parser<S, T3>,
+    parser4: Parser<S, T4>,
+    parser5: Parser<S, T5>,
+    parser6: Parser<S, T6>,
+    parser7: Parser<S, T7>,
+    parser8: Parser<S, T8>,
+    parser9: Parser<S, T9>,
+    parser10: Parser<S, T10>,
+  ): Parser<S, MergeMany<[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>>;
+  static and<S, Ts>(...parsers: Parser<S, Ts>[]): Parser<S, Ts[]>;
+  static and<S, Ts>(...parsers: Parser<S, Ts>[]) {
     const result = parsers.at(0)!;
-    return parsers.slice(1).reduce((a, b) => a.and(b) as Parser<S, Ts>, result);
+    return parsers.slice(1).reduce((a, b) => a.and(b) as any, result);
   }
 
   /**

@@ -21,7 +21,7 @@ const sampleBuiltins = python`
       ...
 
 
-  def mystery(value) -> None:
+  def mystery(value: int) -> None:
       """Unknown param type."""
       ...
 `;
@@ -44,13 +44,13 @@ describe("parseAST", () => {
     expect(ast.methods).toEqual([
       {
         name: "do_thing",
-        params: [{ name: "count", default: "1", type: "int" }],
+        params: [{ name: "count", default: 1, type: "int" }],
         returns: "bool",
         docstring: "Does a thing.",
       },
       {
         name: "mystery",
-        params: [{ name: "value", type: "Any" }],
+        params: [{ name: "value", default: null, type: "int" }],
         returns: "None",
         docstring: "Unknown param type.",
       },
@@ -83,7 +83,7 @@ describe("parseBuiltins", () => {
     const methods = files.find((file) => file.filename === "methods.ts");
     expect(methods?.content).toBe(
       typescript`
-        import type { Any, Bool, Int, None } from "./python.js";
+        import type { Bool, Int, None } from "./python.js";
         import { call } from "./python.js";
 
         /** Does a thing. */
@@ -92,7 +92,7 @@ describe("parseBuiltins", () => {
         }
 
         /** Unknown param type. */
-        export function mystery({ value }: { value: Any }): None {
+        export function mystery({ value }: { value: Int }): None {
           return call("mystery", [value], "None");
         }
       `,
