@@ -61,7 +61,7 @@ type FunctionDeclarationProps = {
   name: string;
   generics?: string[];
   params: { comment?: string; name: string; type: string; default?: string }[];
-  namedParams?: string | true;
+  namedParams?: string | boolean;
   returns?: string;
   body: string;
 };
@@ -280,6 +280,7 @@ function Literal_(value: unknown): string {
   }
 }
 
+(Literal_ as any).Array = ArrayLiteral;
 (Literal_ as any).Object = ObjectLiteral;
 
 export const Literal: {
