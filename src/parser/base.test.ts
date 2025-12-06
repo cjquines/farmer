@@ -14,14 +14,38 @@ describe("Parser combinators", () => {
       }
     });
 
-  it("backtracks when part of a sequence fails", () => {
-    const parser = lit("a").and(lit("b"));
-    const stream = from("ac");
-    const result = parser.parse(stream);
+  it("maps a parser", () => {
+    const result = lit("a")
+      .map((a) => a.toUpperCase())
+      .parse(from("a"));
 
-    expect(result.success).toBe(false);
-    expect(stream.offset).toBe(0);
-    expect(stream.peek()).toEqual("a");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.value).toEqual("A");
+    }
+  });
+
+  it("combines objects", () => {
+    const result = lit("a").as("a").and(lit("b").as("b")).parse(from("ab"));
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.value).toEqual({ a: "a", b: "b" });
+    }
+  });
+
+  it("works with predicates", () => {
+    const parser = lit("a")
+      .or(lit("b"))
+      .if((a) => a === "a");
+    const result1 = parser.parse(from("a"));
+    const result2 = parser.parse(from("b"));
+
+    expect(result1.success).toBe(true);
+    if (result1.success) {
+      expect(result1.value).toEqual("a");
+    }
+    expect(result2.success).toBe(false);
   });
 
   it("falls back to alternatives without consuming the failed branch", () => {
@@ -34,6 +58,16 @@ describe("Parser combinators", () => {
       expect(result.value).toEqual("b");
     }
     expect(stream.offset).toBe(1);
+  });
+
+  it("backtracks when part of a sequence fails", () => {
+    const parser = lit("a").and(lit("b"));
+    const stream = from("ac");
+    const result = parser.parse(stream);
+
+    expect(result.success).toBe(false);
+    expect(stream.offset).toBe(0);
+    expect(stream.peek()).toEqual("a");
   });
 
   it("treats maybe() as a no-op when the parser fails", () => {

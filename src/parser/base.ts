@@ -100,7 +100,8 @@ export class Parser<S, T> {
 
   /** Wrap the result in an object. */
   static asObject<T>(obj: T): ParserObject<T> {
-    (obj as any)[Parser.AsObject] = true;
+    // Use `defineProperty` so it's non-enumerable:
+    Object.defineProperty(obj, Parser.AsObject, { value: true });
     return obj as ParserObject<T>;
   }
 
