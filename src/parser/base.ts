@@ -458,3 +458,5 @@ export class Parser<S, T> {
     });
   }
 }
+
+export type ParserInfer<T> = T extends Parser<any, infer T> ? T : never;

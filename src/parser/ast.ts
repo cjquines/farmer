@@ -1,15 +1,5 @@
+import type { ParserInfer } from "./base.js";
 import { Parser as P, TokenStream } from "./parser.js";
-
-type EnumItem = {
-  name: string;
-  type: string;
-  docstring: string;
-};
-
-type Enum = {
-  name: string;
-  items: EnumItem[];
-};
 
 const enumParser = P.and(
   P.and(
@@ -28,16 +18,7 @@ const enumParser = P.and(
     .as("items"),
 );
 
-type Method = {
-  name: string;
-  params: {
-    name: string;
-    default: string | number | boolean | null;
-    type: string;
-  }[];
-  returns: string;
-  docstring: string;
-};
+type Enum = ParserInfer<typeof enumParser>;
 
 const methodParser = P.and(
   P.name("def").drop(),
@@ -60,10 +41,7 @@ const methodParser = P.and(
   P.op("...").drop(),
 );
 
-const astParser = P.and(
-  enumParser.many().as("enums"),
-  methodParser.many().as("methods"),
-);
+type Method = ParserInfer<typeof methodParser>;
 
 /**
  * Parse the __builtins__.py file to a minimal AST.
@@ -75,7 +53,11 @@ export function parseAST(content: string): {
   enums: Enum[];
   methods: Method[];
 } {
-  const result = astParser.parse(new TokenStream(content));
+  const result = P.and(
+    enumParser.many().as("enums"),
+    methodParser.many().as("methods"),
+  ).parse(new TokenStream(content));
+
   if (!result.success) {
     throw new Error("Failed to parse __builtins__.py");
   }
