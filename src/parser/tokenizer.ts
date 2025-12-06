@@ -20,7 +20,7 @@ const Char = {
   op: /[=+\-*/%&|^<>@:~!()\[\]{},;\.]/,
 };
 
-export function* tokenize(content: string): Generator<Token> {
+function* tokenizeGen(content: string): Generator<Token> {
   let start = 0;
 
   while (start < content.length) {
@@ -78,7 +78,7 @@ export function* tokenize(content: string): Generator<Token> {
             type: TokenType.STRING,
             string: content.slice(start + 1, end),
           };
-          start = end;
+          start = end + 1;
         }
         continue;
       }
@@ -130,4 +130,8 @@ export function* tokenize(content: string): Generator<Token> {
     type: TokenType.ENDMARKER,
     string: "",
   };
+}
+
+export function tokenize(content: string): Token[] {
+  return [...tokenizeGen(content)];
 }

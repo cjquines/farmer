@@ -2,6 +2,10 @@
   "$schema": "https://json.schemastore.org/package",
   "type": "module",
   "scripts": {
+    "build": "tsc",
+    "parse-types": "tsx scripts/parse-types.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "sync": "tsx scripts/sync.ts"
   },
   "devDependencies": {

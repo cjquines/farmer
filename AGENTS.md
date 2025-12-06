@@ -9,7 +9,11 @@
 
 ## Build, Test, and Development Commands
 - `npm install`: Install TypeScript and `tsx` runner dependencies.
+- `npm run build`: Compile the TypeScript sources with `tsc`.
+- `npm run parse-types`: Regenerate TypeScript definitions from `save/__builtins__.py` via the parser into `src/types`.
 - `npm run sync`: Copy `save/__builtins__.py` into the Steam save location and mirror other save files back; ensure the game is closed to avoid conflicts.
+- `npm run test`: Run the Vitest suite once.
+- `npm run test:watch`: Run Vitest in watch mode.
 - `npx tsc --noEmit`: Type-check the codebase using `tsconfig.json` without writing output.
 - Ad hoc scripts: Run any TypeScript file with `npx tsx path/to/file.ts`.
 
@@ -20,7 +24,7 @@
 - Docs: Add concise JSDoc-style comments for game behavior, especially when mirroring in-game timing or side effects.
 
 ## Testing Guidelines
-- No automated test suite exists yet; when adding, install Vitest and keep tests close to subjects (e.g., `src/parser/__tests__/parser.test.ts`).
+- Vitest tests live alongside the parser (e.g., `src/parser/tokenizer.test.ts`); use `npm run test` for a single pass or `npm run test:watch` while iterating.
 - Document any new commands in this guide and `package.json`.
 - Always run `npx tsc --noEmit` before committing to catch type regressions.
 

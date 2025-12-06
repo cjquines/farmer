@@ -17,7 +17,7 @@ export class TokenStream {
   eager: boolean;
 
   constructor(content: string) {
-    this.tokens = [...tokenize(content)];
+    this.tokens = tokenize(content);
     this.offset = 0;
     this.eager = false;
   }
@@ -89,7 +89,9 @@ function concat<T, U>(a: T, b: U) {
     ? Array.isArray(b)
       ? [...a, ...b]
       : [...a, b]
-    : [a, b];
+    : Array.isArray(b)
+      ? [a, ...b]
+      : [a, b];
 }
 
 export class Parser<T> {
