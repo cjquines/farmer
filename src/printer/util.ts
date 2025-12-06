@@ -23,25 +23,35 @@ export function isTruthy<T>(
   return Boolean(value);
 }
 
-export function Indent(value: string, amount: number): string {
+export function indent(value: string, amount: number): string {
   return value
     .split("\n")
     .map((line) => " ".repeat(amount) + line)
     .join("\n");
 }
 
-export function Wrap(value: string, width: number): string {
+export function wrap(value: string, width: number): string {
   const words = value.split("\n").join(" ").split(" ");
-  const lines = [];
+  const lines: string[] = [];
   let line = "";
+
   for (const word of words) {
+    if (line.length === 0) {
+      line = word;
+      continue;
+    }
+
     if (line.length + 1 + word.length > width) {
       lines.push(line);
       line = word;
     } else {
-      line += " " + word;
+      line += ` ${word}`;
     }
   }
-  lines.push(line);
+
+  if (line.length > 0) {
+    lines.push(line);
+  }
+
   return lines.join("\n");
 }

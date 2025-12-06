@@ -1,4 +1,4 @@
-import { isTruthy, Indent, Wrap } from "./util.js";
+import { indent, wrap } from "./util.js";
 
 export function Import({
   type = false,
@@ -9,18 +9,17 @@ export function Import({
   names: string[];
   module: string;
 }) {
-  return ["import", type && "type", "{", ...names, "}", "from", Literal(module)]
-    .filter(isTruthy)
-    .join(" ");
+  const modifier = type ? "type " : "";
+  return `import ${modifier}{ ${names.join(", ")} } from ${Literal(module)};`;
 }
 
 export function JSDoc(comment: string, width = 80) {
-  const lines = Wrap(comment, width).split("\n");
+  const lines = wrap(comment, width).split("\n");
   if (lines.length === 1) {
     return `/** ${lines[0]} */`;
   }
   const body = lines.map((line) => ` * ${line}`).join("\n");
-  return ["/**", ...body, " */"].join("\n");
+  return `/**\n${body}\n */`;
 }
 
 type VariableDeclarationProps = {
@@ -40,19 +39,10 @@ function VariableDeclaration({
   value,
   cast,
 }: VariableDeclarationProps) {
-  return [
-    comment && JSDoc(comment),
-    comment && "\n",
-    export_ && `export `,
-    kind,
-    name,
-    " = ",
-    value,
-    cast && ` as ${cast}`,
-    ";",
-  ]
-    .filter(isTruthy)
-    .join("");
+  const prefix = comment ? `${JSDoc(comment)}\n` : "";
+  const exportKeyword = export_ ? "export " : "";
+  const castSuffix = cast ? ` as ${cast}` : "";
+  return `${prefix}${exportKeyword}${kind} ${name} = ${value}${castSuffix};`;
 }
 
 type FunctionDeclarationProps = {
@@ -76,92 +66,122 @@ function FunctionDeclaration({
   returns,
   body,
 }: FunctionDeclarationProps) {
-  const headerLength = [
-    export_ && "export",
-    "function",
-    name,
-    generics.join(", "),
-    ...params.flatMap((param) => [param.name, param.type]),
-    returns,
-  ]
-    .filter(isTruthy)
-    .reduce((acc, string) => acc + 1 + string.length, 0);
+  const genericsPart = generics.length > 0 ? `<${generics.join(", ")}>` : "";
 
-  const multiLine = params.some((param) => param.comment) || headerLength > 80;
+  const renderParamsInline = () => {
+    if (namedParams) {
+      const destructured = params
+        .map((param) =>
+          param.default ? `${param.name} = ${param.default}` : param.name,
+        )
+        .join(", ");
+      const typed = params
+        .map(
+          (param) => `${param.name}${param.default ? "?" : ""}: ${param.type}`,
+        )
+        .join("; ");
+      return `{ ${destructured} }: { ${typed} }`;
+    }
 
-  let renderedParams: string;
-  if (namedParams) {
-    const destructured = [
-      "{",
-      multiLine
-        ? params
-            .map((param) =>
-              param.default ? `${param.name} = ${param.default}` : param.name,
-            )
-            .join(", ")
-        : params
-            .map((param) =>
-              param.default
-                ? `  ${param.name} = ${param.default}`
-                : `  ${param.name}`,
-            )
-            .join(",\n") + ",",
-      "}: {",
-    ]
-      .filter(isTruthy)
-      .join(multiLine ? "\n" : " ");
-
-    renderedParams = [
-      typeof namedParams === "string" ? `${namedParams}: {` : destructured,
-      multiLine
-        ? params
-            .flatMap((param) => [
-              param.comment && Indent(`  ${JSDoc(param.comment)}`, 2),
-              `  ${param.name}${param.default ? "?" : ""}: ${param.type}`,
-            ])
-            .filter(isTruthy)
-            .join(";\n") + ";"
-        : params
-            .map(
-              (param) =>
-                `${param.name}${param.default ? "?" : ""}: ${param.type}`,
-            )
-            .join("; "),
-      "}",
-    ].join(multiLine ? "\n" : " ");
-  } else {
-    renderedParams = params
+    return params
       .map((param) =>
-        multiLine
-          ? [
-              param.comment && Indent(`  ${JSDoc(param.comment)}`, 2),
-              param.default && `  ${param.name} = ${param.default}`,
-              !param.default && `  ${param.name}: ${param.type}`,
-            ].join("\n")
-          : param.default
-            ? `${param.name} = ${param.default}`
-            : `${param.name}: ${param.type}`,
+        param.default
+          ? `${param.name} = ${param.default}`
+          : `${param.name}: ${param.type}`,
       )
-      .join(multiLine ? "\n" : " ");
-  }
+      .join(", ");
+  };
 
-  const header = [
-    export_ && `export `,
-    "function ",
-    name,
-    generics.length > 0 && `<${generics.join(", ")}>`,
-    "(",
-    multiLine && "\n",
-    renderedParams,
-    multiLine && "\n",
-    ")",
-    returns && `: ${returns}`,
-    " {",
-  ]
-    .filter(isTruthy)
-    .join("");
+  const previewHeader = `${export_ ? "export " : ""}function ${name}${genericsPart}(${renderParamsInline()})${returns ? `: ${returns}` : ""} {`;
+  const multiLine =
+    params.some((param) => param.comment) || previewHeader.length > 80;
 
-  return [comment && JSDoc(comment), header, Indent(body, 2), "}"].join("\n");
+  const renderParams = () => {
+    if (namedParams) {
+      if (multiLine) {
+        const destructured = params
+          .map((param) =>
+            param.default
+              ? `${param.name} = ${param.default},`
+              : `${param.name},`,
+          )
+          .map((line) => indent(line, 2))
+          .join("\n");
+
+        const typed = params
+          .map((param) => {
+            const lines = [];
+            if (param.comment) {
+              lines.push(indent(JSDoc(param.comment), 2));
+            }
+            lines.push(
+              indent(
+                `${param.name}${param.default ? "?" : ""}: ${param.type};`,
+                2,
+              ),
+            );
+            return lines.join("\n");
+          })
+          .join("\n");
+
+        const destructuredBlock =
+          typeof namedParams === "string"
+            ? `${namedParams}`
+            : `{\n${destructured}\n}`;
+
+        return `${destructuredBlock}: {\n${typed}\n}`;
+      }
+
+      const destructured = params
+        .map((param) =>
+          param.default ? `${param.name} = ${param.default}` : param.name,
+        )
+        .join(", ");
+      const typed = params
+        .map(
+          (param) => `${param.name}${param.default ? "?" : ""}: ${param.type}`,
+        )
+        .join("; ");
+      return `${typeof namedParams === "string" ? namedParams : `{ ${destructured} }`}: { ${typed} }`;
+    }
+
+    if (multiLine) {
+      return params
+        .map((param) => {
+          const rendered = param.default
+            ? `${param.name} = ${param.default},`
+            : `${param.name}: ${param.type},`;
+          const lines = [];
+          if (param.comment) {
+            lines.push(indent(JSDoc(param.comment), 2));
+          }
+          lines.push(indent(rendered, 2));
+          return lines.join("\n");
+        })
+        .join("\n");
+    }
+
+    return params
+      .map((param) =>
+        param.default
+          ? `${param.name} = ${param.default}`
+          : `${param.name}: ${param.type}`,
+      )
+      .join(", ");
+  };
+
+  const paramsBlock = renderParams();
+  const header = `${export_ ? "export " : ""}function ${name}${genericsPart}(${multiLine ? "\n" : ""}${multiLine ? indent(paramsBlock, 2) : paramsBlock}${multiLine ? "\n" : ""})${returns ? `: ${returns}` : ""} {`;
+
+  const parts = [
+    comment ? `${JSDoc(comment)}\n` : "",
+    header,
+    "\n",
+    indent(body, 2),
+    "\n}",
+  ];
+
+  return parts.join("");
 }
 
 export function Declaration(
@@ -186,29 +206,28 @@ function ArrayLiteral(
     entries.some((prop) => typeof prop === "object" && prop.comment) ||
     entriesLength > 80;
 
-  return [
-    "[",
-    multiLine
-      ? entries
-          .map((prop) => {
-            if (typeof prop === "string") {
-              return [Indent(prop, 2), ","].join("");
-            }
-            return [
-              prop.comment && Indent(JSDoc(prop.comment), 2),
-              prop.comment && "\n",
-              Indent(prop.value, 2),
-              ",",
-            ].join("");
-          })
-          .join("\n")
-      : entries
-          .map((prop) => {
-            return `${typeof prop === "string" ? prop : prop.value},`;
-          })
-          .join(" "),
-    "]",
-  ].join(multiLine ? "\n" : " ");
+  if (multiLine) {
+    const body = entries
+      .map((prop) => {
+        if (typeof prop === "string") {
+          return indent(`${prop},`, 2);
+        }
+        const lines = [];
+        if (prop.comment) {
+          lines.push(indent(JSDoc(prop.comment), 2));
+        }
+        lines.push(indent(`${prop.value},`, 2));
+        return lines.join("\n");
+      })
+      .join("\n");
+
+    return `[\n${body}\n]`;
+  }
+
+  const body = entries
+    .map((prop) => (typeof prop === "string" ? prop : prop.value))
+    .join(", ");
+  return `[${body}]`;
 }
 
 function ObjectLiteral(
@@ -227,27 +246,31 @@ function ObjectLiteral(
     entries.some(([, prop]) => typeof prop === "object" && prop.comment) ||
     entriesLength > 80;
 
-  return [
-    "{",
-    multiLine
-      ? entries
-          .flatMap(([key, prop]) => {
-            if (typeof prop === "string") {
-              return [`  ${key}: ${prop},`];
-            }
-            return [
-              prop.comment && Indent(JSDoc(prop.comment), 2),
-              `  ${key}: ${prop.value},`,
-            ];
-          })
-          .join("\n")
-      : entries
-          .map(([key, prop]) => {
-            return `${key}: ${typeof prop === "string" ? prop : prop.value},`;
-          })
-          .join(" "),
-    "}",
-  ].join(multiLine ? "\n" : " ");
+  if (multiLine) {
+    const body = entries
+      .map(([key, prop]) => {
+        if (typeof prop === "string") {
+          return indent(`${key}: ${prop},`, 2);
+        }
+        const lines = [];
+        if (prop.comment) {
+          lines.push(indent(JSDoc(prop.comment), 2));
+        }
+        lines.push(indent(`${key}: ${prop.value},`, 2));
+        return lines.join("\n");
+      })
+      .join("\n");
+
+    return `{\n${body}\n}`;
+  }
+
+  const body = entries
+    .map(
+      ([key, prop]) =>
+        `${key}: ${typeof prop === "string" ? prop : prop.value}`,
+    )
+    .join(", ");
+  return `{ ${body} }`;
 }
 
 function Literal_(value: unknown): string {
@@ -312,23 +335,19 @@ export function Call({
   generics?: string[];
   params: string[];
 }) {
-  const callLength =
-    name.length + generics.length > 0
-      ? generics.reduce((acc, type) => acc + type.length + 1, 0) + 2
-      : 0 + params.reduce((acc, param) => acc + param.length, 0);
+  const genericsPart = generics.length > 0 ? `<${generics.join(", ")}>` : "";
+  const inlineParams = params.join(", ");
+  const callInline = `${name}${genericsPart}(${inlineParams})`;
+  const multiLine = callInline.length > 80;
 
-  const multiLine = callLength > 80;
+  if (!multiLine) {
+    return callInline;
+  }
 
-  return [
-    name,
-    generics?.length > 0 && `<${generics.join(", ")}>`,
-    "(",
-    multiLine && "\n",
-    multiLine
-      ? params.map((param) => Indent(param, 2)).join(",\n")
-      : params.join(", "),
-    ")",
-  ].join("");
+  const renderedParams = params
+    .map((param) => indent(`${param},`, 2))
+    .join("\n");
+  return `${name}${genericsPart}(\n${renderedParams}\n)`;
 }
 
 export function Return(value: string) {

@@ -8,58 +8,31 @@ import {
   Return,
   Type,
 } from "./typescript.js";
+import { typescript } from "./util.js";
 
 describe("TypeScript printer", () => {
   it("prints import statements with optional type modifier", () => {
-    expect(
-      Import({ names: ["Thing", "Other"], module: "./module" }),
-    ).toMatchInlineSnapshot(`"import { Thing Other } from "./module""`);
+    expect(Import({ names: ["Thing", "Other"], module: "./module" }))
+      .toBe(typescript`
+        import { Thing, Other } from "./module";
+      `);
 
-    expect(
-      Import({ type: true, names: ["Only"], module: "pkg" }),
-    ).toMatchInlineSnapshot(`"import type { Only } from "pkg""`);
+    expect(Import({ type: true, names: ["Only"], module: "pkg" })).toBe(
+      typescript`
+        import type { Only } from "pkg";
+      `,
+    );
   });
 
   it("renders JSDoc blocks with wrapped content", () => {
-    expect(JSDoc("hello world")).toMatchInlineSnapshot(`"/**  hello world */"`);
+    expect(JSDoc("hello world")).toBe(typescript`/** hello world */`);
 
-    expect(JSDoc("a long comment for doc", 10)).toMatchInlineSnapshot(`
-      "/**
-       
-      *
-       
-       
-      a
-       
-      l
-      o
-      n
-      g
-
-
-       
-      *
-       
-      c
-      o
-      m
-      m
-      e
-      n
-      t
-
-
-       
-      *
-       
-      f
-      o
-      r
-       
-      d
-      o
-      c
-       */"
+    expect(JSDoc("a long comment for doc", 10)).toBe(typescript`
+      /**
+       * a long
+       * comment
+       * for doc
+       */
     `);
   });
 
@@ -72,9 +45,9 @@ describe("TypeScript printer", () => {
       value: "42",
     });
 
-    expect(variable).toMatchInlineSnapshot(`
-      "/**  desc */
-      export constVALUE = 42;"
+    expect(variable).toBe(typescript`
+      /** desc */
+      export const VALUE = 42;
     `);
 
     const destructured = Declaration({
@@ -89,19 +62,19 @@ describe("TypeScript printer", () => {
       body: "return foo as T;",
     });
 
-    expect(destructured).toMatchInlineSnapshot(`
-      "
+    expect(destructured).toBe(typescript`
       export function useThing<T, U>(
-      {
-      foo, bar = 3
-      }: {
-          /**  first */;
-        foo: string;
-        bar?: number;
-      }
+        {
+          foo,
+          bar = 3,
+        }: {
+          /** first */
+          foo: string;
+          bar?: number;
+        }
       ): T {
         return foo as T;
-      }"
+      }
     `);
 
     const positional = Declaration({
@@ -115,58 +88,63 @@ describe("TypeScript printer", () => {
       body: "return a + b;",
     });
 
-    expect(positional).toMatchInlineSnapshot(`
-      "
-      function add(a: number b: number) {
+    expect(positional).toBe(typescript`
+      function add(a: number, b: number) {
         return a + b;
-      }"
+      }
     `);
   });
 
   it("prints literal values", () => {
-    expect(Literal([1, 2])).toMatchInlineSnapshot(`"[ 1, 2, ]"`);
-    expect(Literal({ foo: "bar", count: 3 })).toMatchInlineSnapshot(
-      `"{ foo: "bar", count: 3, }"`,
+    expect(Literal([1, 2])).toBe(typescript`[1, 2]`);
+    expect(Literal({ foo: "bar", count: 3 })).toBe(
+      typescript`{ foo: "bar", count: 3 }`,
     );
 
-    const objectLiteral = (Literal as any).Object([
+    const objectLiteral = Literal.Object([
       ["first", { comment: "primary", value: "Value.FIRST" }],
       ["second", "Value.SECOND"],
     ]);
 
-    expect(objectLiteral).toMatchInlineSnapshot(`
-      "{
-        /**  primary */
+    expect(objectLiteral).toBe(typescript`
+      {
+        /** primary */
         first: Value.FIRST,
         second: Value.SECOND,
-      }"
+      }
     `);
   });
 
   it("prints type compositions", () => {
-    expect(Type.Union(["A", "B", "C"])).toMatchInlineSnapshot(`"A | B | C"`);
-    expect(
-      Type.Generic({ name: "Map", types: ["Key", "Value"] }),
-    ).toMatchInlineSnapshot(`"Map<Key, Value>"`);
+    expect(Type.Union(["A", "B", "C"])).toBe(typescript`A | B | C`);
+    expect(Type.Generic({ name: "Map", types: ["Key", "Value"] })).toBe(
+      typescript`Map<Key, Value>`,
+    );
   });
 
   it("renders function calls and return statements", () => {
-    expect(
-      Call({ name: "build", params: ["foo", "bar"] }),
-    ).toMatchInlineSnapshot(`"buildfalse(falsefoo, bar)"`);
+    expect(Call({ name: "build", params: ["foo", "bar"] })).toBe(
+      typescript`build(foo, bar)`,
+    );
 
     expect(
       Call({
         name: "call",
-        generics: ["X".repeat(81)],
-        params: ["first", "second"],
+        generics: ["Some", Type.Union(["Very", "Long"]), "Generics"],
+        params: [
+          "firstLongParameter",
+          "secondLongParameter",
+          "thirdLongParameter",
+        ],
       }),
-    ).toMatchInlineSnapshot(`
-      "call<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>(
-        first,
-        second)"
+    ).toBe(typescript`
+      call<Some, Very | Long, Generics>(
+        firstLongParameter,
+        secondLongParameter,
+        thirdLongParameter,
+      )
     `);
 
-    expect(Return("value")).toMatchInlineSnapshot(`"return value;"`);
+    expect(Return("value")).toBe(typescript`return value;`);
   });
 });
