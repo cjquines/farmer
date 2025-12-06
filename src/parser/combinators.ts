@@ -1,14 +1,23 @@
 import type { Token } from "./tokenizer.js";
 import { tokenize, TokenType } from "./tokenizer.js";
 
-type Result<T> = { success: true; value: T } | { success: false };
+type ParseResult<T> =
+  | {
+      success: true;
+      value: T;
+    }
+  | {
+      success: false;
+      /** Whether this parser matched any input before failing. */
+      matched: boolean;
+    };
 
-function success<T>(value: T): Result<T> {
+function success<T>(value: T): ParseResult<T> {
   return { success: true, value };
 }
 
-function failure<T>(): Result<T> {
-  return { success: false };
+function failure<T>(matched = false): ParseResult<T> {
+  return { success: false, matched };
 }
 
 export class TokenStream {
@@ -20,6 +29,10 @@ export class TokenStream {
     this.tokens = tokenize(content);
     this.offset = 0;
     this.eager = false;
+  }
+
+  error(): never {
+    throw new Error(`Syntax error at ${this.offset} = ${this.peek()}`);
   }
 
   peek(): Token {
@@ -40,23 +53,18 @@ export class TokenStream {
     return this.peek().type === TokenType.ENDMARKER;
   }
 
-  try<T>(fn: (backtrack: () => Result<T>) => Result<T>): Result<T> {
+  try<T>(
+    fn: (backtrack: (matched?: boolean) => ParseResult<T>) => ParseResult<T>,
+  ): ParseResult<T> {
     const offset = this.offset;
-    const backtrack = () => {
-      if (this.eager) {
-        throw new Error(`Syntax error at ${this.offset} = ${this.peek()}`);
+    const backtrack = (matched = false) => {
+      if (this.eager && matched) {
+        this.error();
       }
       this.offset = offset;
-      return failure<T>();
+      return failure<T>(matched);
     };
     return fn(backtrack);
-  }
-
-  commit<T>(fn: () => T): T {
-    this.eager = true;
-    const result = fn();
-    this.eager = false;
-    return result;
   }
 }
 
@@ -95,10 +103,18 @@ function concat<T, U>(a: T, b: U) {
 }
 
 export class Parser<T> {
-  parse: (stream: TokenStream) => Result<T>;
+  parseStream: (stream: TokenStream) => ParseResult<T>;
 
-  constructor(parse: (stream: TokenStream) => Result<T>) {
-    this.parse = parse;
+  constructor(parseStream: (stream: TokenStream) => ParseResult<T>) {
+    this.parseStream = parseStream;
+  }
+
+  parse(content: string): ParseResult<T>;
+  parse(stream: TokenStream): ParseResult<T>;
+  parse(input: string | TokenStream): ParseResult<T> {
+    return this.parseStream(
+      typeof input === "string" ? new TokenStream(input) : input,
+    );
   }
 
   /** Match a specific token type. */
@@ -142,11 +158,11 @@ export class Parser<T> {
       return stream.try((backtrack) => {
         const resultT = this.parse(stream);
         if (!resultT.success) {
-          return backtrack();
+          return backtrack(resultT.matched);
         }
         const resultU = other.parse(stream);
         if (!resultU.success) {
-          return backtrack();
+          return backtrack(true);
         }
         return success(concat(resultT.value, resultU.value));
       });
@@ -159,11 +175,11 @@ export class Parser<T> {
       return stream.try((backtrack) => {
         const resultT = this.parse(stream);
         if (!resultT.success) {
-          return backtrack();
+          return backtrack(resultT.matched);
         }
         const resultU = other.parse(stream);
         if (!resultU.success) {
-          return backtrack();
+          return backtrack(true);
         }
         return success(resultU.value);
       });
@@ -176,11 +192,11 @@ export class Parser<T> {
       return stream.try((backtrack) => {
         const resultT = this.parse(stream);
         if (!resultT.success) {
-          return backtrack();
+          return backtrack(resultT.matched);
         }
         const resultU = other.parse(stream);
         if (!resultU.success) {
-          return backtrack();
+          return backtrack(true);
         }
         return success(resultT.value);
       });
@@ -279,7 +295,15 @@ export class Parser<T> {
    */
   commit(): Parser<T> {
     return new Parser<T>((stream) => {
-      return stream.commit(() => this.parse(stream));
+      const result = this.parse(stream);
+      if (!result.success) {
+        if (result.matched) {
+          stream.error();
+        }
+        return result;
+      }
+      stream.eager = true;
+      return result;
     });
   }
 }

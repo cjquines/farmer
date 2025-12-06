@@ -8,10 +8,19 @@ export const TokenType = {
 } as const;
 export type TokenType = (typeof TokenType)[keyof typeof TokenType];
 
-export type Token<T extends TokenType = TokenType> = {
+export class Token<T extends TokenType = TokenType> {
   type: T;
   string: string;
-};
+
+  constructor(type: T, string: string) {
+    this.type = type;
+    this.string = string;
+  }
+
+  toString() {
+    return `${this.type}: ${this.string}`;
+  }
+}
 
 const Char = {
   nameStart: /[a-zA-Z_]/,
@@ -39,10 +48,7 @@ function* tokenizeGen(content: string): Generator<Token> {
         while (end < content.length && content[end] !== "\n") {
           end += 1;
         }
-        yield {
-          type: TokenType.COMMENT,
-          string: content.slice(start, end),
-        };
+        yield new Token(TokenType.COMMENT, content.slice(start, end));
         start = end;
         continue;
       }
@@ -64,20 +70,14 @@ function* tokenizeGen(content: string): Generator<Token> {
           ) {
             end += 1;
           }
-          yield {
-            type: TokenType.STRING,
-            string: content.slice(start + 3, end),
-          };
+          yield new Token(TokenType.STRING, content.slice(start + 3, end));
           start = end + 3;
         } else {
           let end = start + 1;
           while (end < content.length && content[end] !== content[start]) {
             end += 1;
           }
-          yield {
-            type: TokenType.STRING,
-            string: content.slice(start + 1, end),
-          };
+          yield new Token(TokenType.STRING, content.slice(start + 1, end));
           start = end + 1;
         }
         continue;
@@ -89,10 +89,7 @@ function* tokenizeGen(content: string): Generator<Token> {
       while (end < content.length && Char.name.test(content[end]!)) {
         end += 1;
       }
-      yield {
-        type: TokenType.NAME,
-        string: content.slice(start, end),
-      };
+      yield new Token(TokenType.NAME, content.slice(start, end));
       start = end;
       continue;
     }
@@ -102,10 +99,7 @@ function* tokenizeGen(content: string): Generator<Token> {
       while (end < content.length && Char.number.test(content[end]!)) {
         end += 1;
       }
-      yield {
-        type: TokenType.NUMBER,
-        string: content.slice(start, end),
-      };
+      yield new Token(TokenType.NUMBER, content.slice(start, end));
       start = end;
       continue;
     }
@@ -115,10 +109,7 @@ function* tokenizeGen(content: string): Generator<Token> {
       while (end < content.length && Char.op.test(content[end]!)) {
         end += 1;
       }
-      yield {
-        type: TokenType.OP,
-        string: content.slice(start, end),
-      };
+      yield new Token(TokenType.OP, content.slice(start, end));
       start = end;
       continue;
     }
@@ -126,10 +117,7 @@ function* tokenizeGen(content: string): Generator<Token> {
     throw new Error(`Unexpected character: ${char}`);
   }
 
-  yield {
-    type: TokenType.ENDMARKER,
-    string: "",
-  };
+  yield new Token(TokenType.ENDMARKER, "");
 }
 
 export function tokenize(content: string): Token[] {

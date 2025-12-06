@@ -7,6 +7,17 @@ describe("Parser combinators", () => {
   const number = Parser.token(TokenType.NUMBER);
   const operator = Parser.token(TokenType.OP);
 
+  const literal = (value: string) =>
+    new Parser((stream) =>
+      stream.try((backtrack) => {
+        const token = stream.next();
+        if (token.type === TokenType.NAME && token.string === value) {
+          return { success: true as const, value: token };
+        }
+        return backtrack();
+      }),
+    );
+
   it("backtracks when part of a sequence fails", () => {
     const nameThenNumber = name.then(number);
     const stream = new TokenStream("alpha beta");
@@ -120,29 +131,46 @@ describe("Parser combinators", () => {
     expect(() => parser.parse(stream)).toThrow(/Syntax error/);
   });
 
-  it.skip("parses committed alternation a ~ b | c ~ d", () => {
-    const literalName = (value: string) =>
-      new Parser((stream) =>
-        stream.try((backtrack) => {
-          const token = stream.next();
-          if (token.type === TokenType.NAME && token.string === value) {
-            return { success: true as const, value: token };
-          }
-          return backtrack();
-        }),
-      );
-
-    const parser = literalName("a")
+  it("parses committed alternation a ~ b | c ~ d", () => {
+    const parser = literal("a")
       .commit()
-      .then(literalName("b"))
-      .or(literalName("c").commit().then(literalName("d")));
+      .then(literal("b"))
+      .or(literal("c").commit().then(literal("d")));
 
-    const first = parser.parse(new TokenStream("a b"));
-    expect(first.success).toBe(true);
+    expect(parser.parse("a b").success).toBe(true);
 
-    const second = parser.parse(new TokenStream("c d"));
-    expect(second.success).toBe(true);
+    expect(parser.parse("c d").success).toBe(true);
 
-    expect(() => parser.parse(new TokenStream("a d"))).toThrow(/Syntax error/);
+    expect(() => parser.parse("a d")).toThrow(/Syntax error/);
+  });
+
+  it("parses nested alternation a ~ (b c | d) | e (f ~ g | h) i | j", () => {
+    const parser = literal("a")
+      .commit()
+      .then(literal("b").then(literal("c")).or(literal("d")))
+      .or(
+        literal("e")
+          .then(literal("f").commit().then(literal("g")).or(literal("h")))
+          .then(literal("i")),
+      )
+      .or(literal("j"));
+
+    expect(parser.parse("a b c").success).toBe(true);
+
+    expect(parser.parse("a d").success).toBe(true);
+
+    expect(() => parser.parse("a b d")).toThrow(/Syntax error/);
+
+    expect(() => parser.parse("a b")).toThrow(/Syntax error/);
+
+    expect(() => parser.parse("a e")).toThrow(/Syntax error/);
+
+    expect(parser.parse("e f g i").success).toBe(true);
+
+    expect(() => parser.parse("e f i")).toThrow(/Syntax error/);
+
+    expect(parser.parse("e h i").success).toBe(true);
+
+    expect(parser.parse("j").success).toBe(true);
   });
 });
