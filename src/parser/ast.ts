@@ -1,13 +1,18 @@
 import type { ParserInfer } from "./base.js";
 import { Parser as P, TokenStream } from "./parser.js";
 
+const importParser = P.and(
+  P.name("from").drop().commit(),
+  P.name().as("module"),
+  P.name("import").drop(),
+  P.op(",").join(P.name()).as("names"),
+);
+
 const enumParser = P.and(
-  P.and(
-    P.name("class").drop(),
-    P.name(),
-    P.op(":").drop(),
-    P.string().maybe().drop(),
-  ).as("name"),
+  P.name("class").drop().commit(),
+  P.name().as("name"),
+  P.op(":").drop(),
+  P.string().maybe().drop(),
   P.and(
     P.name().as("name"),
     P.op(":").drop(),
@@ -21,7 +26,7 @@ const enumParser = P.and(
 type Enum = ParserInfer<typeof enumParser>;
 
 const methodParser = P.and(
-  P.name("def").drop(),
+  P.name("def").drop().commit(),
   P.name().as("name"),
   P.and(
     P.op("(").drop(),
@@ -53,13 +58,17 @@ export function parseAST(content: string): {
   enums: Enum[];
   methods: Method[];
 } {
+  const stream = new TokenStream(content);
   const result = P.and(
-    enumParser.many().as("enums"),
-    methodParser.many().as("methods"),
-  ).parse(new TokenStream(content));
+    P.comment().many().drop(),
+    importParser.many().drop(),
+    P.and(P.comment().many().drop(), enumParser).some().as("enums"),
+    P.and(P.comment().many().drop(), methodParser).some().as("methods"),
+    P.eof().drop(),
+  ).parse(stream);
 
   if (!result.success) {
-    throw new Error("Failed to parse __builtins__.py");
+    return stream.error();
   }
 
   return {

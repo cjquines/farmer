@@ -32,14 +32,20 @@ export class ParseStream<T> extends BaseStream<T> {
     fn: (backtrack: (matched?: boolean) => ParseResult<T>) => ParseResult<T>,
   ): ParseResult<T> {
     const offset = this.offset;
+    const eager = this.eager;
     const backtrack = (matched = false) => {
       if (this.eager && matched) {
         this.error();
       }
       this.seek(offset);
+      this.eager = eager;
       return failure<T>(matched);
     };
-    return fn(backtrack);
+    try {
+      return fn(backtrack);
+    } finally {
+      this.eager = eager;
+    }
   }
 }
 
@@ -376,7 +382,13 @@ export class Parser<S, T> {
     return new Parser<S, T[]>((stream) => {
       const results: T[] = [];
       while (true) {
-        const result = this.parse(stream);
+        const result = stream.try<T>((backtrack) => {
+          const parsed = this.parse(stream);
+          if (!parsed.success) {
+            return backtrack(parsed.matched);
+          }
+          return parsed;
+        });
         if (!result.success) {
           break;
         }
@@ -393,7 +405,21 @@ export class Parser<S, T> {
    */
   some(): Parser<S, [T, ...T[]]>;
   some() {
-    return this.and(this.many()) as unknown;
+    return new Parser<S, [T, ...T[]]>((stream) => {
+      return stream.try((backtrack) => {
+        const first = this.parse(stream);
+        if (!first.success) {
+          return backtrack(first.matched);
+        }
+
+        const rest = this.many().parse(stream);
+        if (!rest.success) {
+          return backtrack(rest.matched);
+        }
+
+        return success([first.value, ...rest.value]);
+      });
+    });
   }
 
   /**

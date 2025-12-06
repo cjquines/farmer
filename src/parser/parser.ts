@@ -37,6 +37,10 @@ export class Parser<T> extends BaseParser<Token, T> {
     });
   }
 
+  static comment = () => Parser.token(TokenType.COMMENT);
+
+  static eof = () => Parser.token(TokenType.ENDMARKER);
+
   static number = (value?: string) =>
     Parser.token(TokenType.NUMBER, value).map((t) => parseInt(t.string));
 

@@ -4,6 +4,13 @@ import { parseAST } from "./ast.js";
 import { parseBuiltins } from "./index.js";
 
 const sampleBuiltins = python`
+  # comment 1
+  # comment 2
+
+  from typing import Any
+  from builtins import type
+
+  # divider
   class Item:
       """A member of the Items class"""
 
@@ -16,12 +23,14 @@ const sampleBuiltins = python`
       """Bar doc"""
 
 
+  # divider
   def do_thing(count: int = 1) -> bool:
       """Does a thing."""
       ...
 
 
-  def mystery(value: int) -> None:
+  # divider
+  def mystery(value: Any) -> None:
       """Unknown param type."""
       ...
 `;
@@ -50,7 +59,7 @@ describe("parseAST", () => {
       },
       {
         name: "mystery",
-        params: [{ name: "value", default: null, type: "int" }],
+        params: [{ name: "value", default: null, type: "Any" }],
         returns: "None",
         docstring: "Unknown param type.",
       },
@@ -83,7 +92,7 @@ describe("parseBuiltins", () => {
     const methods = files.find((file) => file.filename === "methods.ts");
     expect(methods?.content).toBe(
       typescript`
-        import type { Bool, Int, None } from "./python.js";
+        import type { Any, Bool, Int, None } from "./python.js";
         import { call } from "./python.js";
 
         /** Does a thing. */
@@ -92,7 +101,7 @@ describe("parseBuiltins", () => {
         }
 
         /** Unknown param type. */
-        export function mystery({ value }: { value: Int }): None {
+        export function mystery({ value }: { value: Any }): None {
           return call("mystery", [value], "None");
         }
       `,

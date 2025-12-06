@@ -98,6 +98,27 @@ describe("Parser combinators", () => {
     expect(stream.peek()).toEqual("b");
   });
 
+  it("backtracks when many() parser fails after consuming input", () => {
+    const consumingFailure = new Parser<string, string>((stream) => {
+      if (stream.peek() === "a") {
+        stream.next();
+        return failure(true);
+      }
+      return failure();
+    });
+
+    const parser = consumingFailure.many();
+    const stream = from("abc");
+    const result = parser.parse(stream);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.value).toEqual([]);
+    }
+    expect(stream.offset).toBe(0);
+    expect(stream.peek()).toEqual("a");
+  });
+
   it("requires at least one element for some()", () => {
     const parser = lit("a").some();
     const stream = from("b");
