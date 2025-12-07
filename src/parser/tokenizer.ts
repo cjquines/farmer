@@ -29,6 +29,44 @@ const Char = {
   op: /[=+\-*/%&|^<>@:~!()\[\]{},;\.]/,
 };
 
+const THREE_CHAR_OPS = new Set(["<<=", ">>=", "//=", "**=", "..."]);
+const TWO_CHAR_OPS = new Set([
+  "->",
+  "==",
+  ">=",
+  "<=",
+  "!=",
+  "//",
+  "**",
+  "+=",
+  "-=",
+  "*=",
+  "/=",
+  "%=",
+  "&=",
+  "|=",
+  "^=",
+  ">>",
+  "<<",
+]);
+
+function readOperator(
+  content: string,
+  start: number,
+): { token: string; end: number } {
+  const three = content.slice(start, start + 3);
+  if (THREE_CHAR_OPS.has(three)) {
+    return { token: three, end: start + 3 };
+  }
+
+  const two = content.slice(start, start + 2);
+  if (TWO_CHAR_OPS.has(two)) {
+    return { token: two, end: start + 2 };
+  }
+
+  return { token: content[start]!, end: start + 1 };
+}
+
 function* tokenizeGen(content: string): Generator<Token> {
   let start = 0;
 
@@ -105,11 +143,8 @@ function* tokenizeGen(content: string): Generator<Token> {
     }
 
     if (Char.op.test(char)) {
-      let end = start + 1;
-      while (end < content.length && Char.op.test(content[end]!)) {
-        end += 1;
-      }
-      yield new Token(TokenType.OP, content.slice(start, end));
+      const { token, end } = readOperator(content, start);
+      yield new Token(TokenType.OP, token);
       start = end;
       continue;
     }

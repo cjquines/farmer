@@ -59,7 +59,7 @@ describe("parseAST", () => {
       },
       {
         name: "mystery",
-        params: [{ name: "value", default: null, type: "Any" }],
+        params: [{ name: "value", type: "Any" }],
         returns: "None",
         docstring: "Unknown param type.",
       },

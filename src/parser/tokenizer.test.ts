@@ -49,6 +49,19 @@ describe("tokenize", () => {
     ]);
   });
 
+  it("splits punctuation that should not be merged", () => {
+    const tokens = tokenize("def foo():");
+
+    expect(tokens).toEqual([
+      { type: TokenType.NAME, string: "def" },
+      { type: TokenType.NAME, string: "foo" },
+      { type: TokenType.OP, string: "(" },
+      { type: TokenType.OP, string: ")" },
+      { type: TokenType.OP, string: ":" },
+      { type: TokenType.ENDMARKER, string: "" },
+    ]);
+  });
+
   it("still yields an endmarker for empty input", () => {
     const tokens = tokenize("");
 
