@@ -17,7 +17,7 @@ describe("Parser combinators", () => {
   it("maps a parser", () => {
     const result = lit("a")
       .map((a) => a.toUpperCase())
-      .parse(from("a"));
+      .parseStream(from("a"));
 
     expect(result.success).toBe(true);
     if (result.success) {
@@ -31,7 +31,7 @@ describe("Parser combinators", () => {
       lit("b").drop(),
       lit("c").as("c"),
       lit("d").as("d"),
-    ).parse(from("abcd"));
+    ).parseStream(from("abcd"));
 
     expect(result.success).toBe(true);
     if (result.success) {
@@ -43,8 +43,8 @@ describe("Parser combinators", () => {
     const parser = lit("a")
       .or(lit("b"))
       .if((a) => a === "a");
-    const result1 = parser.parse(from("a"));
-    const result2 = parser.parse(from("b"));
+    const result1 = parser.parseStream(from("a"));
+    const result2 = parser.parseStream(from("b"));
 
     expect(result1.success).toBe(true);
     if (result1.success) {
@@ -56,7 +56,7 @@ describe("Parser combinators", () => {
   it("falls back to alternatives without consuming the failed branch", () => {
     const parser = lit("a").or(lit("b"));
     const stream = from("b");
-    const result = parser.parse(stream);
+    const result = parser.parseStream(stream);
 
     expect(result.success).toBe(true);
     if (result.success) {
@@ -68,7 +68,7 @@ describe("Parser combinators", () => {
   it("backtracks when part of a sequence fails", () => {
     const parser = lit("a").and(lit("b"));
     const stream = from("ac");
-    const result = parser.parse(stream);
+    const result = parser.parseStream(stream);
 
     expect(result.success).toBe(false);
     expect(stream.offset).toBe(0);
@@ -78,7 +78,7 @@ describe("Parser combinators", () => {
   it("treats maybe() as a no-op when the parser fails", () => {
     const parser = lit("a").maybe();
     const stream = from("b");
-    const result = parser.parse(stream);
+    const result = parser.parseStream(stream);
 
     expect(result.success).toBe(true);
     expect(result.success && result.value).toBeNull();
@@ -88,7 +88,7 @@ describe("Parser combinators", () => {
   it("collects matches with many() until the first miss", () => {
     const parser = lit("a").many();
     const stream = from("aab");
-    const result = parser.parse(stream);
+    const result = parser.parseStream(stream);
 
     expect(result.success).toBe(true);
     if (result.success) {
@@ -109,7 +109,7 @@ describe("Parser combinators", () => {
 
     const parser = consumingFailure.many();
     const stream = from("abc");
-    const result = parser.parse(stream);
+    const result = parser.parseStream(stream);
 
     expect(result.success).toBe(true);
     if (result.success) {
@@ -122,7 +122,7 @@ describe("Parser combinators", () => {
   it("requires at least one element for some()", () => {
     const parser = lit("a").some();
     const stream = from("b");
-    const result = parser.parse(stream);
+    const result = parser.parseStream(stream);
 
     expect(result.success).toBe(false);
     expect(stream.offset).toBe(0);
@@ -131,7 +131,7 @@ describe("Parser combinators", () => {
   it("joins items with separators while discarding the separators", () => {
     const parser = lit(",").join(lit("a"));
     const stream = from("a,a,b");
-    const result = parser.parse(stream);
+    const result = parser.parseStream(stream);
 
     expect(result.success).toBe(true);
     if (result.success) {
@@ -144,7 +144,7 @@ describe("Parser combinators", () => {
   it("looks ahead without consuming with with()", () => {
     const parser = lit("a").with(lit("b"));
     const stream = from("ab");
-    const result1 = parser.parse(stream);
+    const result1 = parser.parseStream(stream);
 
     expect(result1.success).toBe(true);
     if (result1.success) {
@@ -152,7 +152,7 @@ describe("Parser combinators", () => {
     }
     expect(stream.offset).toBe(1);
 
-    const result2 = lit("b").parse(stream);
+    const result2 = lit("b").parseStream(stream);
 
     expect(result2.success).toBe(true);
     if (result2.success) {
@@ -166,11 +166,11 @@ describe("Parser combinators", () => {
     const stream1 = from("ab");
     const stream2 = from("ac");
 
-    const result1 = parser.parse(stream1);
+    const result1 = parser.parseStream(stream1);
     expect(result1.success).toBe(false);
     expect(stream1.offset).toBe(0);
 
-    const result2 = parser.parse(stream2);
+    const result2 = parser.parseStream(stream2);
     expect(result2.success).toBe(true);
     expect(stream2.offset).toBe(1);
   });
@@ -179,7 +179,7 @@ describe("Parser combinators", () => {
     const parser = lit("a").commit().and(lit("b")).or(lit("a"));
     const stream = from("ac");
 
-    expect(() => parser.parse(stream)).toThrow(/Syntax error/);
+    expect(() => parser.parseStream(stream)).toThrow(/Syntax error/);
   });
 
   it("parses committed alternation a ~ b | c ~ d", () => {
@@ -188,9 +188,9 @@ describe("Parser combinators", () => {
       lit("c").commit().and(lit("d")),
     );
 
-    expect(parser.parse(from("ab")).success).toBe(true);
-    expect(parser.parse(from("cd")).success).toBe(true);
-    expect(() => parser.parse(from("ad"))).toThrow(/Syntax error/);
+    expect(parser.parseStream(from("ab")).success).toBe(true);
+    expect(parser.parseStream(from("cd")).success).toBe(true);
+    expect(() => parser.parseStream(from("ad"))).toThrow(/Syntax error/);
   });
 
   it("parses nested alternation a ~ (b c | d) | e (f ~ g | h) i | j", () => {
@@ -213,14 +213,14 @@ describe("Parser combinators", () => {
       lit("j"),
     );
 
-    expect(parser.parse(from("abc")).success).toBe(true);
-    expect(parser.parse(from("ad")).success).toBe(true);
-    expect(() => parser.parse(from("abd"))).toThrow(/Syntax error/);
-    expect(() => parser.parse(from("ab"))).toThrow(/Syntax error/);
-    expect(() => parser.parse(from("ae"))).toThrow(/Syntax error/);
-    expect(parser.parse(from("efgi")).success).toBe(true);
-    expect(() => parser.parse(from("efi"))).toThrow(/Syntax error/);
-    expect(parser.parse(from("ehi")).success).toBe(true);
-    expect(parser.parse(from("j")).success).toBe(true);
+    expect(parser.parseStream(from("abc")).success).toBe(true);
+    expect(parser.parseStream(from("ad")).success).toBe(true);
+    expect(() => parser.parseStream(from("abd"))).toThrow(/Syntax error/);
+    expect(() => parser.parseStream(from("ab"))).toThrow(/Syntax error/);
+    expect(() => parser.parseStream(from("ae"))).toThrow(/Syntax error/);
+    expect(parser.parseStream(from("efgi")).success).toBe(true);
+    expect(() => parser.parseStream(from("efi"))).toThrow(/Syntax error/);
+    expect(parser.parseStream(from("ehi")).success).toBe(true);
+    expect(parser.parseStream(from("j")).success).toBe(true);
   });
 });

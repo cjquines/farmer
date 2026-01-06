@@ -2,57 +2,57 @@ import type { PythonType } from "./python.js";
 
 export const Hats = {
   /** A brown hat. */
-  BrownHat: "Brown_Hat",
+  BrownHat: "Hats.Brown_Hat",
   /** A hat shaped like a cactus. */
-  CactusHat: "Cactus_Hat",
+  CactusHat: "Hats.Cactus_Hat",
   /** A hat shaped like a carrot. */
-  CarrotHat: "Carrot_Hat",
+  CarrotHat: "Hats.Carrot_Hat",
   /** Equip it to start the dinosaur game. */
-  DinosaurHat: "Dinosaur_Hat",
+  DinosaurHat: "Hats.Dinosaur_Hat",
   /** A golden hat. */
-  GoldHat: "Gold_Hat",
+  GoldHat: "Hats.Gold_Hat",
   /** A golden trophy hat. */
-  GoldTrophyHat: "Gold_Trophy_Hat",
+  GoldTrophyHat: "Hats.Gold_Trophy_Hat",
   /** A golden hat shaped like a cactus. */
-  GoldenCactusHat: "Golden_Cactus_Hat",
+  GoldenCactusHat: "Hats.Golden_Cactus_Hat",
   /** A golden hat shaped like a carrot. */
-  GoldenCarrotHat: "Golden_Carrot_Hat",
+  GoldenCarrotHat: "Hats.Golden_Carrot_Hat",
   /** A golden version of the gold hat. */
-  GoldenGoldHat: "Golden_Gold_Hat",
+  GoldenGoldHat: "Hats.Golden_Gold_Hat",
   /** A golden hat shaped like a pumpkin. */
-  GoldenPumpkinHat: "Golden_Pumpkin_Hat",
+  GoldenPumpkinHat: "Hats.Golden_Pumpkin_Hat",
   /** A golden hat shaped like a sunflower. */
-  GoldenSunflowerHat: "Golden_Sunflower_Hat",
+  GoldenSunflowerHat: "Hats.Golden_Sunflower_Hat",
   /** A golden hat shaped like a tree. */
-  GoldenTreeHat: "Golden_Tree_Hat",
+  GoldenTreeHat: "Hats.Golden_Tree_Hat",
   /** A gray hat. */
-  GrayHat: "Gray_Hat",
+  GrayHat: "Hats.Gray_Hat",
   /** A green hat. */
-  GreenHat: "Green_Hat",
+  GreenHat: "Hats.Green_Hat",
   /** A hat shaped like a pumpkin. */
-  PumpkinHat: "Pumpkin_Hat",
+  PumpkinHat: "Hats.Pumpkin_Hat",
   /** A purple hat. */
-  PurpleHat: "Purple_Hat",
+  PurpleHat: "Hats.Purple_Hat",
   /** A silver trophy hat. */
-  SilverTrophyHat: "Silver_Trophy_Hat",
+  SilverTrophyHat: "Hats.Silver_Trophy_Hat",
   /** The default hat. */
-  StrawHat: "Straw_Hat",
+  StrawHat: "Hats.Straw_Hat",
   /** A hat shaped like a sunflower. */
-  SunflowerHat: "Sunflower_Hat",
+  SunflowerHat: "Hats.Sunflower_Hat",
   /** The remains of the farmer. */
-  TheFarmersRemains: "The_Farmers_Remains",
+  TheFarmersRemains: "Hats.The_Farmers_Remains",
   /** A fancy top hat. */
-  TopHat: "Top_Hat",
+  TopHat: "Hats.Top_Hat",
   /** A traffic cone hat. */
-  TrafficCone: "Traffic_Cone",
+  TrafficCone: "Hats.Traffic_Cone",
   /** A stack of traffic cones as a hat. */
-  TrafficConeStack: "Traffic_Cone_Stack",
+  TrafficConeStack: "Hats.Traffic_Cone_Stack",
   /** A hat shaped like a tree. */
-  TreeHat: "Tree_Hat",
+  TreeHat: "Hats.Tree_Hat",
   /** A magical wizard hat. */
-  WizardHat: "Wizard_Hat",
+  WizardHat: "Hats.Wizard_Hat",
   /** A wooden trophy hat. */
-  WoodTrophyHat: "Wood_Trophy_Hat",
+  WoodTrophyHat: "Hats.Wood_Trophy_Hat",
 } as const;
 
 export type TSHat = (typeof Hats)[keyof typeof Hats];

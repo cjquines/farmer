@@ -65,16 +65,21 @@ export class Parser<S, T> {
   /**
    * Parse a stream.
    *
-   * We wrap the `#parse` property so inheriting classes can override it
-   * for convenience.
+   * We wrap the `#parse` property so inheriting classes can use `parse` for
+   * their own parsing logic.
    */
-  parse(content: S[]): ParseResult<T>;
-  parse(stream: ParseStream<S>): ParseResult<T>;
-  parse(input: S[] | ParseStream<S>): ParseResult<T>;
-  parse(input: S[] | ParseStream<S>): ParseResult<T> {
-    return this.#parse(
-      input instanceof ParseStream ? input : new ParseStream(input),
-    );
+  parseStream(stream: ParseStream<S>): ParseResult<T> {
+    return this.#parse(stream);
+  }
+
+  /**
+   * Parse a list of tokens.
+   *
+   * We wrap the `#parse` property so inheriting classes can use `parse` for
+   * their own parsing logic.
+   */
+  parseTokens(tokens: S[]): ParseResult<T> {
+    return this.#parse(new ParseStream(tokens));
   }
 
   /**
@@ -82,7 +87,7 @@ export class Parser<S, T> {
    */
   map<U>(fn: (value: T) => U): Parser<S, U> {
     return new Parser<S, U>((stream) => {
-      const result = this.parse(stream);
+      const result = this.#parse(stream);
       if (!result.success) {
         return result as any;
       }
@@ -141,7 +146,7 @@ export class Parser<S, T> {
    */
   if(predicate: (value: T) => boolean): Parser<S, T> {
     return new Parser<S, T>((stream) => {
-      const result = this.parse(stream);
+      const result = this.#parse(stream);
       if (!result.success) {
         return result;
       }
@@ -159,11 +164,11 @@ export class Parser<S, T> {
    */
   or<U>(other: Parser<S, U>): Parser<S, T | U> {
     return new Parser<S, T | U>((stream) => {
-      const result = this.parse(stream);
+      const result = this.#parse(stream);
       if (result.success) {
         return result;
       }
-      return other.parse(stream);
+      return other.#parse(stream);
     });
   }
 
@@ -261,11 +266,11 @@ export class Parser<S, T> {
   and<U>(other: Parser<S, U>) {
     return new Parser<S, unknown>((stream) => {
       return stream.try((backtrack) => {
-        const resultT = this.parse(stream);
+        const resultT = this.#parse(stream);
         if (!resultT.success) {
           return backtrack(resultT.matched);
         }
-        const resultU = other.parse(stream);
+        const resultU = other.#parse(stream);
         if (!resultU.success) {
           return backtrack(true);
         }
@@ -365,7 +370,7 @@ export class Parser<S, T> {
    */
   maybe(): Parser<S, T | null> {
     return new Parser<S, T | null>((stream) => {
-      const result = this.parse(stream);
+      const result = this.#parse(stream);
       if (result.success) {
         return result;
       }
@@ -383,7 +388,7 @@ export class Parser<S, T> {
       const results: T[] = [];
       while (true) {
         const result = stream.try<T>((backtrack) => {
-          const parsed = this.parse(stream);
+          const parsed = this.#parse(stream);
           if (!parsed.success) {
             return backtrack(parsed.matched);
           }
@@ -407,12 +412,12 @@ export class Parser<S, T> {
   some() {
     return new Parser<S, [T, ...T[]]>((stream) => {
       return stream.try((backtrack) => {
-        const first = this.parse(stream);
+        const first = this.#parse(stream);
         if (!first.success) {
           return backtrack(first.matched);
         }
 
-        const rest = this.many().parse(stream);
+        const rest = this.many().#parse(stream);
         if (!rest.success) {
           return backtrack(rest.matched);
         }
@@ -442,7 +447,7 @@ export class Parser<S, T> {
     return this.and(
       new Parser<S, U>((stream) => {
         const offset = stream.offset;
-        const result = other.parse(stream);
+        const result = other.#parse(stream);
         stream.seek(offset);
         return result;
       }).drop(),
@@ -458,7 +463,7 @@ export class Parser<S, T> {
     return this.and(
       new Parser<S, null>((stream) => {
         const offset = stream.offset;
-        const result = other.parse(stream);
+        const result = other.#parse(stream);
         stream.seek(offset);
         return result.success ? failure() : success(null);
       }).drop(),
@@ -472,7 +477,7 @@ export class Parser<S, T> {
    */
   commit(): Parser<S, T> {
     return new Parser<S, T>((stream) => {
-      const result = this.parse(stream);
+      const result = this.#parse(stream);
       if (!result.success) {
         if (result.matched) {
           stream.error();

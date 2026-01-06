@@ -1,4 +1,4 @@
-import type { ParserInfer } from "./base.js";
+import type { ParseResult, ParserInfer } from "./base.js";
 import { failure, success } from "./base.js";
 import { Parser as P, TokenStream } from "./parser.js";
 import { TokenType } from "./tokenizer.js";
@@ -79,7 +79,7 @@ const methodParser = P.and(
           P.and(P.op("=").drop(), P.constant().as("default")).maybe(),
         ).map((param) => ({
           ...param,
-          type: param.type ?? "Any",
+          type: "type" in param ? param.type : "Any",
         })),
       )
       .maybe()
@@ -94,7 +94,7 @@ const methodParser = P.and(
   P.op("...").drop(),
 ).map((method) => ({
   ...method,
-  returns: method.returns ?? "Any",
+  returns: "returns" in method ? method.returns : "Any",
 }));
 
 type Method = ParserInfer<typeof methodParser>;
@@ -110,10 +110,12 @@ export function parseAST(content: string): {
   methods: Method[];
 } {
   const stream = new TokenStream(content);
-  const parseOrThrow = <T>(parser: P<T>): T => {
-    const result = parser.parse(stream);
+  const parseOrThrow = <T>(parser: {
+    parseStream(stream: TokenStream): ParseResult<T>;
+  }): T => {
+    const result = parser.parseStream(stream);
     if (!result.success) {
-      stream.error();
+      throw stream.error();
     }
     return result.value;
   };
@@ -125,7 +127,7 @@ export function parseAST(content: string): {
   while (true) {
     const start = stream.offset;
     parseOrThrow(P.comment().many().drop());
-    const parsed = enumParser.parse(stream);
+    const parsed = enumParser.parseStream(stream);
     if (!parsed.success) {
       stream.seek(start);
       break;
@@ -146,7 +148,7 @@ export function parseAST(content: string): {
       P.op("(").maybe().drop(),
       P.op(")").maybe().drop(),
       P.string().maybe().drop(),
-    ).parse(stream);
+    ).parseStream(stream);
     if (!assignment.success) {
       stream.seek(start);
       break;
@@ -157,7 +159,7 @@ export function parseAST(content: string): {
   while (true) {
     const start = stream.offset;
     parseOrThrow(P.comment().many().drop());
-    const parsed = methodParser.parse(stream);
+    const parsed = methodParser.parseStream(stream);
     if (!parsed.success) {
       stream.seek(start);
       break;

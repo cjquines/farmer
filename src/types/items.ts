@@ -2,38 +2,41 @@ import type { PythonType } from "./python.js";
 
 export const Items = {
   /** The bones of an ancient creature. */
-  Bone: "Bone",
+  Bone: "Items.Bone",
   /** Obtained by harvesting sorted cacti. */
-  Cactus: "Cactus",
+  Cactus: "Items.Cactus",
   /** Obtained by harvesting carrots. */
-  Carrot: "Carrot",
+  Carrot: "Items.Carrot",
   /**
    * Call `use_item(Items.Fertilizer)` to instantly remove 2s from the plants
    * remaining grow time.
    */
-  Fertilizer: "Fertilizer",
+  Fertilizer: "Items.Fertilizer",
   /** Found in treasure chests in mazes. */
-  Gold: "Gold",
+  Gold: "Items.Gold",
   /** Obtained by cutting grass. */
-  Hay: "Hay",
-  /** This item has been removed from the game but remains as a nostalgia trophy. */
-  Piggy: "Piggy",
+  Hay: "Items.Hay",
   /**
-   * Obtained by harvesting sunflowers. The drone automatically uses this to move
-   * twice as fast.
+   * This item has been removed from the game but remains as a nostalgia
+   * trophy.
    */
-  Power: "Power",
+  Piggy: "Items.Piggy",
+  /**
+   * Obtained by harvesting sunflowers. The drone automatically uses this to
+   * move twice as fast.
+   */
+  Power: "Items.Power",
   /** Obtained by harvesting pumpkins. */
-  Pumpkin: "Pumpkin",
+  Pumpkin: "Items.Pumpkin",
   /** Used to water the ground by calling `use_item(Items.Water)`. */
-  Water: "Water",
+  Water: "Items.Water",
   /**
-   * Call `use_item(Items.Weird_Substance)` on a bush to grow a maze, or on other
-   * plants to toggle their infection status.
+   * Call `use_item(Items.Weird_Substance)` on a bush to grow a maze, or on
+   * other plants to toggle their infection status.
    */
-  WeirdSubstance: "Weird_Substance",
+  WeirdSubstance: "Items.Weird_Substance",
   /** Obtained from bushes and trees. */
-  Wood: "Wood",
+  Wood: "Items.Wood",
 } as const;
 
 export type TSItem = (typeof Items)[keyof typeof Items];

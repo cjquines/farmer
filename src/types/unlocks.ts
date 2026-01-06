@@ -2,88 +2,103 @@ import type { PythonType } from "./python.js";
 
 export const Unlocks = {
   /** Automatically unlock things. */
-  AutoUnlock: "Auto_Unlock",
-  /** Unlock: Cactus!     Upgrade: Increases the yield and cost of cactus.      */
-  Cactus: "Cactus",
+  AutoUnlock: "Unlocks.Auto_Unlock",
   /**
-   * Unlock: Till the soil and plant carrots.     Upgrade: Increases the yield and
-   * cost of carrots.     
+   * Unlock: Cactus!
+   * Upgrade: Increases the yield and cost of cactus.
    */
-  Carrots: "Carrots",
+  Cactus: "Unlocks.Cactus",
+  /**
+   * Unlock: Till the soil and plant carrots.
+   * Upgrade: Increases the yield and cost of carrots.
+   */
+  Carrots: "Unlocks.Carrots",
   /** Allows access to the cost of things. */
-  Costs: "Costs",
+  Costs: "Unlocks.Costs",
   /** Tools to help with debugging programs. */
-  Debug: "Debug",
-  /** Functions to temporarily slow down the execution and make the grid smaller. */
-  Debug2: "Debug_2",
+  Debug: "Unlocks.Debug",
+  /**
+   * Functions to temporarily slow down the execution and make the grid
+   * smaller.
+   */
+  Debug2: "Unlocks.Debug_2",
   /** Get access to dictionaries and sets. */
-  Dictionaries: "Dictionaries",
+  Dictionaries: "Unlocks.Dictionaries",
   /**
-   * Unlock: Majestic ancient creatures.     Upgrade: Increases the yield and cost of
-   * dinosaurs.     
+   * Unlock: Majestic ancient creatures.
+   * Upgrade: Increases the yield and cost of dinosaurs.
    */
-  Dinosaurs: "Dinosaurs",
+  Dinosaurs: "Unlocks.Dinosaurs",
   /**
-   * Unlock: Expands the farm land and unlocks movement.     Upgrade: Expands the
-   * farm. This also clears the farm.     
+   * Unlock: Expands the farm land and unlocks movement.
+   * Upgrade: Expands the farm. This also clears the farm.
    */
-  Expand: "Expand",
-  /** Reduces the remaining growing time of the plant under the drone by 2 seconds. */
-  Fertilizer: "Fertilizer",
+  Expand: "Unlocks.Expand",
+  /**
+   * Reduces the remaining growing time of the plant under the drone by 2
+   * seconds.
+   */
+  Fertilizer: "Unlocks.Fertilizer",
   /** Define your own functions. */
-  Functions: "Functions",
+  Functions: "Unlocks.Functions",
   /** Increases the yield of grass. */
-  Grass: "Grass",
+  Grass: "Unlocks.Grass",
   /** Unlocks new hat colors for your drone. */
-  Hats: "Hats",
+  Hats: "Unlocks.Hats",
   /** Import code from other files. */
-  Import: "Import",
+  Import: "Unlocks.Import",
   /** Join the leaderboard for the fastest reset time. */
-  Leaderboard: "Leaderboard",
+  Leaderboard: "Unlocks.Leaderboard",
   /** Use lists to store lots of values. */
-  Lists: "Lists",
+  Lists: "Unlocks.Lists",
   /** Unlocks a simple while loop. */
-  Loops: "Loops",
+  Loops: "Unlocks.Loops",
   /**
-   * Unlock: A maze with a treasure in the middle.     Upgrade: Increases the gold in
-   * treasure chests.     
+   * Unlock: A maze with a treasure in the middle.
+   * Upgrade: Increases the gold in treasure chests.
    */
-  Mazes: "Mazes",
+  Mazes: "Unlocks.Mazes",
   /** Unlocks multiple drones and drone management functions. */
-  Megafarm: "Megafarm",
+  Megafarm: "Unlocks.Megafarm",
   /** Arithmetic, comparison and logic operators. */
-  Operators: "Operators",
+  Operators: "Unlocks.Operators",
   /** Unlocks planting. */
-  Plant: "Plant",
+  Plant: "Unlocks.Plant",
   /** Use companion planting to increase the yield. */
-  Polyculture: "Polyculture",
-  /** Unlock: Pumpkins!     Upgrade: Increases the yield and cost of pumpkins.      */
-  Pumpkins: "Pumpkins",
-  /** The drone can see what's under it and where it is. */
-  Senses: "Senses",
-  /** Unlocks simulation functions for testing and optimization. */
-  Simulation: "Simulation",
-  /** Increases the speed of the drone. */
-  Speed: "Speed",
+  Polyculture: "Unlocks.Polyculture",
   /**
-   * Unlock: Sunflowers and Power.     Upgrade: Increases the power gained from
-   * sunflowers.     
+   * Unlock: Pumpkins!
+   * Upgrade: Increases the yield and cost of pumpkins.
    */
-  Sunflowers: "Sunflowers",
+  Pumpkins: "Unlocks.Pumpkins",
+  /** The drone can see what's under it and where it is. */
+  Senses: "Unlocks.Senses",
+  /** Unlocks simulation functions for testing and optimization. */
+  Simulation: "Unlocks.Simulation",
+  /** Increases the speed of the drone. */
+  Speed: "Unlocks.Speed",
+  /**
+   * Unlock: Sunflowers and Power.
+   * Upgrade: Increases the power gained from sunflowers.
+   */
+  Sunflowers: "Unlocks.Sunflowers",
   /** Unlocks the special hat 'The Farmers Remains'. */
-  TheFarmersRemains: "The_Farmers_Remains",
+  TheFarmersRemains: "Unlocks.The_Farmers_Remains",
   /** Functions to help measure performance. */
-  Timing: "Timing",
+  Timing: "Unlocks.Timing",
   /** Unlocks the fancy Top Hat. */
-  TopHat: "Top_Hat",
-  /** Unlock: Unlocks trees.     Upgrade: Increases the yield of bushes and trees.     */
-  Trees: "Trees",
+  TopHat: "Unlocks.Top_Hat",
+  /**
+   * Unlock: Unlocks trees.
+   * Upgrade: Increases the yield of bushes and trees.
+   */
+  Trees: "Unlocks.Trees",
   /** Unlocks the `min()`, `max()` and `abs()` functions. */
-  Utilities: "Utilities",
+  Utilities: "Unlocks.Utilities",
   /** Assign values to variables. */
-  Variables: "Variables",
+  Variables: "Unlocks.Variables",
   /** Water the plants to make them grow faster. */
-  Watering: "Watering",
+  Watering: "Unlocks.Watering",
 } as const;
 
 export type TSUnlock = (typeof Unlocks)[keyof typeof Unlocks];

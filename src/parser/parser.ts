@@ -15,7 +15,13 @@ export class Parser<T> extends BaseParser<Token, T> {
   parse(stream: ParseStream<Token>): ParseResult<T>;
   parse(input: string | Token[] | ParseStream<Token>): ParseResult<T>;
   parse(input: string | Token[] | ParseStream<Token>): ParseResult<T> {
-    return super.parse(typeof input === "string" ? tokenize(input) : input);
+    if (input instanceof ParseStream) {
+      return super.parseStream(input);
+    }
+    if (Array.isArray(input)) {
+      return super.parseTokens(input);
+    }
+    return super.parseTokens(tokenize(input));
   }
 
   /** Match a specific token type, possibly with a specific value. */

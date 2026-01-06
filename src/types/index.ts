@@ -1,3 +1,4 @@
+export * from "./directions.js";
 export * from "./entities.js";
 export * from "./grounds.js";
 export * from "./hats.js";
