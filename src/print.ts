@@ -1,7 +1,5 @@
 import * as F from "./types/index.js";
 
-type AnyPythonType = F.PythonType<string, any>;
-
 function printValue(
   value:
     | F.Bool
@@ -9,9 +7,9 @@ function printValue(
     | F.Int
     | F.None
     | F.Str
-    | F.Dict<AnyPythonType, AnyPythonType>
-    | F.List<AnyPythonType>
-    | F.Tuple<AnyPythonType, AnyPythonType>,
+    | F.Dict<F.AnyPythonType, F.AnyPythonType>
+    | F.List<F.AnyPythonType>
+    | F.Tuple<F.AnyPythonType, F.AnyPythonType>,
 ): string {
   if (
     typeof value === "object" &&
@@ -56,6 +54,6 @@ function printValue(
   }
 }
 
-export function printProgram(program: AnyPythonType[]): string {
+export function printProgram(program: F.AnyPythonType[]): string {
   return program.map((call) => printValue(call)).join("\n");
 }
